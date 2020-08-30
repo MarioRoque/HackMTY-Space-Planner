@@ -122,18 +122,21 @@ def createRoom(polygon, walkingPath,tables):
 
     return [[rx,ry],[px,py],tables]
 
-def distributeRandom(polygon,usableTables, walking_polygon):
+def distributeRandom(polygon,usableTables, walking_polygon,scaleX,scaleY):
     '''
     this function distributes the tables on random places, it needs to verify the distances
     '''
     global minDistance
     global numberTables
     tables = []
-    point = np.random.random_sample((1, 2))*15
+
+    bigger = scaleX if scaleX > scaleY else scaleY
+
+    point = np.random.random_sample((1, 2))*bigger
     for i in range(0, numberTables):
-        point = np.random.random_sample((1, 2))*15
+        point = np.random.random_sample((1, 2))*bigger
         while(not isInside([point[0][0],point[0][1]],polygon)) or (Polygon(polygon).exterior.distance(Point(point[0][0],point[0][1]).buffer(.82)) < minDistance or isInside([point[0][0],point[0][1]],walking_polygon)):
-            point = np.random.random_sample((1, 2))*15
+            point = np.random.random_sample((1, 2))*bigger
         
         tables.append([point[0][0], point[0][1]])
         
@@ -239,7 +242,7 @@ def main(info):
     limit_cycles = True
     
     print(info)
-    
+
     E = polygons[info["walkingPath"]] # <<<<<---------
     selected_polygon = polygons[info["polygonName"]]
 
@@ -250,7 +253,7 @@ def main(info):
         
         left_tables = usableTables * 1000
         #print("TO BUILD",left_tables)
-        tables = distributeRandom(selected_polygon,left_tables,E) # <<<<<---------
+        tables = distributeRandom(selected_polygon,left_tables,E,info["scaleX"],info["scaleY"]) # <<<<<---------
         tables = verifyGlobalDistance(tables + tables_filtered)
         if len(tables) > 0:
             createRoom(selected_polygon,E,tables) # <<<<<---------
