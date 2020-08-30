@@ -42,7 +42,7 @@ walking_polygon = None
 emergency_doors  = None
 
 polygons = {
-    "box1" : [ [0,0],[15,0],[15,15],[0,15]],
+    "box1" : [ [0,0],[1,0],[1,1],[0,1]],
     "cuña" :[[0,0],[0,2],[3,2],[3,0],[2,0],[2,1],[1,1],[1,0]],
     "church" : [[1,0],[1,2],[0,2],[0,3],[1,3],[1,4],[2,4],[2,3],[3,3],[3,2],[2,2],[2,0]],
     "E": [[0,0],[0,3.5],[13,3.5],[13,7],[0,7],[0,10.5],[13,10.5],[13,14],[0,14],[0,17.5],[14.5,17.5],[14.5,0]]
@@ -211,7 +211,8 @@ def createJSON():
     "tables": tables_filtered,
     "room": selected_polygon,
     "walkingPath": walking_polygon,
-    "emergency_doors": emergency_doors
+    "emergency_doors": emergency_doors,
+    "generated" : len(tables_filtered),
 
     }
     return make_response(jsonify(response)), 200
@@ -237,16 +238,22 @@ def main(info):
     counter = 0
     limit_cycles = True
     
+    print(info)
+    
     E = polygons[info["walkingPath"]] # <<<<<---------
+    selected_polygon = polygons[info["polygonName"]]
+
+    if info["polygonName"] == "box1":
+        selected_polygon = [(x[0]*info["scaleX"],x[1]*info["scaleY"]) for x in selected_polygon]
 
     while len(tables_filtered) < usableTables and limit_cycles:
         
         left_tables = usableTables * 1000
         #print("TO BUILD",left_tables)
-        tables = distributeRandom(polygons[info["polygonName"]],left_tables,E) # <<<<<---------
+        tables = distributeRandom(selected_polygon,left_tables,E) # <<<<<---------
         tables = verifyGlobalDistance(tables + tables_filtered)
         if len(tables) > 0:
-            createRoom(polygons[info["polygonName"]],E,tables) # <<<<<---------
+            createRoom(selected_polygon,E,tables) # <<<<<---------
         
         tables_filtered = tables_filtered + [x for x in tables if x not in tables_filtered]
         counter += 1
@@ -255,7 +262,7 @@ def main(info):
             
         print("ITERATION",counter, len(tables_filtered))
 
-    selected_polygon = polygons[info["polygonName"]]
+    
     walking_polygon = polygons[info["walkingPath"]]
     emergency_doors = doors[info["polygonName"]]
 
