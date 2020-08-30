@@ -25,6 +25,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import matplotlib.pyplot as plt
 import numpy as np
+from flask import request, make_response, jsonify
 
 
 
@@ -34,6 +35,11 @@ numberTables = 0
 percentajeOfUse = 0
 minDistance = 0
 debugFlag = True
+
+tables_filtered = None
+selected_polygon  = None
+walking_polygon = None
+emergency_doors  = None
 
 polygons = {
     "box1" : [ [0,0],[15,0],[15,15],[0,15]],
@@ -46,6 +52,7 @@ walkingPath = {
     "test": []
     }
 
+doors = {"box1" : [ [0,0]]}
 
 #layout[0] = Room Corners, #layout[1] = Path para caminar  #layout[2] = Table position
 layout = [[0,0],[0,0],[0,0]]
@@ -157,10 +164,6 @@ def isInside(point, polygon):
     return polygon.contains(point)
 
 
-def selectTables():
-        
-    return 0
-
 
 def verifyDistace(A,all_points):
     global minDistance
@@ -202,75 +205,48 @@ def getGlobalDistance(all_points):
     return sum(distances)/len(distances)
         
 
-def regeneratePoints():
-    
-    return 0
-
-def warnings():
-
-    return 0
-
-
-def plotPoints():
-    
-    return 0
-
 def createJSON():
-    
-    return 0
+    response = {
 
+    "tables": tables_filtered,
+    "room": selected_polygon,
+    "walkingPath": walking_polygon,
+    "emergency_doors": emergency_doors
 
-def receiveFromUnity():
+    }
+    return make_response(jsonify(response)), 200
 
-    usableTables = 0
-    numberTables = 0
-    percentajeOfUse = 0
-    minDistance = 0
-
-    return 0
-
-
-def sendToUnity():
-    
-    return 0
-
-    
-def main():
-    global debugFlag
-    if(debugFlag):
-        debug()
-    else:
-        pass
-    return 0
-
-def debug():
+def main(info):
     global usableTables
     global numberTables
     global percentajeOfUse
     global minDistance
     global tables_filtered
+    global selected_polygon
+    global walking_polygon
+    global emergency_doors
     
-    tableSize = .82  #Radio de nuestra mesa
-    numberTables = 18
-    percentajeOfUse = 50
-    minDistance = 1.5 + tableSize
+    tableSize = info["tableSize"] #Radio de nuestra mesa# <<<<<---------
+    numberTables = info["tableNumber"]# <<<<<---------
+    percentajeOfUse = info["threshold"]# <<<<<---------
+    minDistance = info["distance"] + tableSize
     usableTables= int(numberTables* percentajeOfUse/100)
     debug_walkingPath()
     tables_filtered = []
-    limit = 100
+    limit = 50
     counter = 0
     limit_cycles = True
     
-    church = [(x[0]*4,x[1]*4) for x in polygons['church']]
-    E = polygons['E']
+    E = polygons[info["walkingPath"]] # <<<<<---------
+
     while len(tables_filtered) < usableTables and limit_cycles:
         
         left_tables = usableTables * 1000
         #print("TO BUILD",left_tables)
-        tables = distributeRandom(polygons['box1'],left_tables,E)
+        tables = distributeRandom(polygons[info["polygonName"]],left_tables,E) # <<<<<---------
         tables = verifyGlobalDistance(tables + tables_filtered)
         if len(tables) > 0:
-            createRoom(polygons['box1'],E,tables)
+            createRoom(polygons[info["polygonName"]],E,tables) # <<<<<---------
         
         tables_filtered = tables_filtered + [x for x in tables if x not in tables_filtered]
         counter += 1
@@ -279,10 +255,13 @@ def debug():
             
         print("ITERATION",counter, len(tables_filtered))
 
-    plt.show()
+    selected_polygon = polygons[info["polygonName"]]
+    walking_polygon = polygons[info["walkingPath"]]
+    emergency_doors = doors[info["polygonName"]]
 
+    #plt.show()
+    return createJSON()
 
-    
-debug()   
+   
     
     
