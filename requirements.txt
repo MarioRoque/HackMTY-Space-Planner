@@ -2,3 +2,4 @@ flask
 shapely
 matplotlib
 numpy
+waitress
