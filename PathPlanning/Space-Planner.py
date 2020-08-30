@@ -114,17 +114,17 @@ def createRoom(polygon, walkingPath,tables):
 
     return [[rx,ry],[px,py],tables]
 
-def distributeRandom(polygon,usableTables):
+def distributeRandom(polygon,usableTables, walking_polygon):
     '''
     this function distributes the tables on random places, it needs to verify the distances
     '''
     global numberTables
     tables = []
-    point = np.random.random_sample((1, 2))*10
+    point = np.random.random_sample((1, 2))*15
     for i in range(0, numberTables):
-        point = np.random.random_sample((1, 2))*10
-        while(not isInside([point[0][0],point[0][1]],polygon)):
-            point = np.random.random_sample((1, 2))*10
+        point = np.random.random_sample((1, 2))*15
+        while(not isInside([point[0][0],point[0][1]],polygon)) or (isInside([point[0][0],point[0][1]],walking_polygon)):
+            point = np.random.random_sample((1, 2))*15
         tables.append([point[0][0], point[0][1]])
         
     return tables
@@ -140,29 +140,7 @@ def excludePoints(object_coordinates,polygon, inside=True):
             exclude_point_outside(point,polygon)
     return
 
-def exclude_point_inside(point, polygon):
-    '''
-    Input: Point e.g [0.0] and and polygon e.g [[0,0],[1,1],...]
-    '''
-    if isInside (point,polygon):
-        #Everything is good
-        pass
-    else:
-        #Logic to exclude this point
-        pass
-    return 
 
-def exclude_point_outside(point, polygon):
-    '''
-    Input: Point e.g [0.0] and and polygon e.g [[0,0],[1,1],...]
-    '''
-    if not isInside (point,polygon):
-        #Everything is good
-        pass
-    else:
-        #Logic to exclude this point
-        pass
-    return 
 
 def isInside(point, polygon):
 
@@ -180,15 +158,45 @@ def selectTables():
     return 0
 
 
-def verifyDistace():
+def verifyDistace(A,all_points):
+    global minDistance
+    counter = 0
+    list_to_delete = []
+    for B in all_points:
+        if A != B:
+            distance = Point(A).distance(Point(B))
+            if distance < minDistance:
+                #print("Point too close",A,B,distance)
+                list_to_delete.append(counter)
+        counter += 1
+        
+        
+    return list_to_delete
+
+def verifyGlobalDistance(all_points):
+    list_to_delete = []
+    for point in all_points:
+        list_to_delete += verifyDistace(point,all_points)
+
+    #print("Found too close",list_to_delete)
+    list_to_delete = [all_points[x] for x in list_to_delete ]
     
-    return 0
+    return [x for x in all_points if x not in list_to_delete]
 
 
-def verifyGlobalDistance():
-    
-    return 0
-
+def getAvgDistance(A, all_points):
+    distances = []
+    for B in all_points:
+        if A != B:
+            distances.append(Point(A).distance(Point(B)))
+    print(min(distances))
+    return sum(distances)/len(distances)
+def getGlobalDistance(all_points):
+    distances = []
+    for point in all_points:
+        distances.append(getAvgDistance(point,all_points))
+    return sum(distances)/len(distances)
+        
 
 def regeneratePoints():
     
@@ -225,16 +233,40 @@ def debug():
     global numberTables
     global percentajeOfUse
     global minDistance
+    global tables_filtered
     
-    numberTables = 20
-    percentajeOfUse = 50
+    numberTables = 50
+    percentajeOfUse = 100
     minDistance = 1.5
     usableTables= numberTables* percentajeOfUse/100
     debug_walkingPath()
-    tables = distributeRandom(polygons['box1'],usableTables)
-    createRoom(polygons['box1'],walkingPath['test'],tables)
+    tables_filtered = []
+    limit = 100
+    counter = 0
+    limit_cycles = True
+    
+    church = [(x[0]*4,x[1]*4) for x in polygons['church']]
+    
+    while len(tables_filtered) < usableTables and limit_cycles:
+        
+        left_tables = usableTables * 4
+        #print("TO BUILD",left_tables)
+        tables = distributeRandom(polygons['box1'],left_tables,church)
+        tables = verifyGlobalDistance(tables + tables_filtered)
+        if len(tables) > 0:
+            createRoom(polygons['box1'],church,tables)
+        
+        tables_filtered = tables_filtered + [x for x in tables if x not in tables_filtered]
+        counter += 1
+        if counter > limit:
+            limit_cycles = False
+            
+        print("ITERATION",counter, len(tables_filtered))
 
- 
-main()   
+    plt.show()
+
+
+    
+debug()   
     
     
