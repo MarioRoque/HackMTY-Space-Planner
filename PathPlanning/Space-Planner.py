@@ -215,6 +215,17 @@ def createJSON():
     
     return 0
 
+
+def receiveFromUnity():
+
+    usableTables = 0
+    numberTables = 0
+    percentajeOfUse = 0
+    minDistance = 0
+
+    return 0
+
+
 def sendToUnity():
     
     return 0
