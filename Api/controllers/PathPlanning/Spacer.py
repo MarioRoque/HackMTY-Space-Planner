@@ -45,7 +45,7 @@ polygons = {
     "box1" : [ [0,0],[1,0],[1,1],[0,1]],
     "cuña" :[[0,0],[0,2],[3,2],[3,0],[2,0],[2,1],[1,1],[1,0]],
     "church" : [[1,0],[1,2],[0,2],[0,3],[1,3],[1,4],[2,4],[2,3],[3,3],[3,2],[2,2],[2,0]],
-    "E": [[0,0],[0,3.5],[13,3.5],[13,7],[0,7],[0,10.5],[13,10.5],[13,14],[0,14],[0,17.5],[14.5,17.5],[14.5,0]]
+    "E": [[0,0],[0,2],[14,2],[14,7],[0,7],[0,9],[14,9],[14,15],[0,15],[0,17.5],[14.5,17.5],[14.5,0]]
 }
 
 walkingPath = {
@@ -135,7 +135,7 @@ def distributeRandom(polygon,usableTables, walking_polygon,scaleX,scaleY):
     point = np.random.random_sample((1, 2))*bigger
     for i in range(0, numberTables):
         point = np.random.random_sample((1, 2))*bigger
-        while(not isInside([point[0][0],point[0][1]],polygon)) or (Polygon(polygon).exterior.distance(Point(point[0][0],point[0][1]).buffer(.82)) < minDistance or isInside([point[0][0],point[0][1]],walking_polygon)):
+        while(not isInside([point[0][0],point[0][1]],polygon)) or (Polygon(polygon).exterior.distance(Point(point[0][0],point[0][1]).buffer(.3)) < minDistance or isInside([point[0][0],point[0][1]],walking_polygon)):
             point = np.random.random_sample((1, 2))*bigger
         
         tables.append([point[0][0], point[0][1]])
@@ -233,7 +233,7 @@ def main(info):
     tableSize = info["tableSize"] #Radio de nuestra mesa# <<<<<---------
     numberTables = info["tableNumber"]# <<<<<---------
     percentajeOfUse = info["threshold"]# <<<<<---------
-    minDistance = info["distance"] + tableSize
+    minDistance = info["distance"] 
     usableTables= int(numberTables* percentajeOfUse/100)
     debug_walkingPath()
     tables_filtered = []
