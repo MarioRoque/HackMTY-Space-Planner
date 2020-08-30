@@ -38,7 +38,8 @@ debugFlag = True
 polygons = {
     "box1" : [ [0,0],[15,0],[15,15],[0,15]],
     "cuña" :[[0,0],[0,2],[3,2],[3,0],[2,0],[2,1],[1,1],[1,0]],
-    "church" : [[1,0],[1,2],[0,2],[0,3],[1,3],[1,4],[2,4],[2,3],[3,3],[3,2],[2,2],[2,0]]
+    "church" : [[1,0],[1,2],[0,2],[0,3],[1,3],[1,4],[2,4],[2,3],[3,3],[3,2],[2,2],[2,0]],
+    "E": [[0,0],[0,3.5],[13,3.5],[13,7],[0,7],[0,10.5],[13,10.5],[13,14],[0,14],[0,17.5],[14.5,17.5],[14.5,0]]
 }
 
 walkingPath = {
@@ -118,16 +119,19 @@ def distributeRandom(polygon,usableTables, walking_polygon):
     '''
     this function distributes the tables on random places, it needs to verify the distances
     '''
+    global minDistance
     global numberTables
     tables = []
     point = np.random.random_sample((1, 2))*15
     for i in range(0, numberTables):
         point = np.random.random_sample((1, 2))*15
-        while(not isInside([point[0][0],point[0][1]],polygon)) or (isInside([point[0][0],point[0][1]],walking_polygon)):
+        while(not isInside([point[0][0],point[0][1]],polygon)) or (Polygon(polygon).exterior.distance(Point(point[0][0],point[0][1]).buffer(.82)) < minDistance or isInside([point[0][0],point[0][1]],walking_polygon)):
             point = np.random.random_sample((1, 2))*15
+        
         tables.append([point[0][0], point[0][1]])
         
     return tables
+
 
 def excludePoints(object_coordinates,polygon, inside=True):
     '''
@@ -246,10 +250,11 @@ def debug():
     global minDistance
     global tables_filtered
     
-    numberTables = 50
-    percentajeOfUse = 100
-    minDistance = 1.5
-    usableTables= numberTables* percentajeOfUse/100
+    tableSize = .82  #Radio de nuestra mesa
+    numberTables = 18
+    percentajeOfUse = 50
+    minDistance = 1.5 + tableSize
+    usableTables= int(numberTables* percentajeOfUse/100)
     debug_walkingPath()
     tables_filtered = []
     limit = 100
@@ -257,15 +262,15 @@ def debug():
     limit_cycles = True
     
     church = [(x[0]*4,x[1]*4) for x in polygons['church']]
-    
+    E = polygons['E']
     while len(tables_filtered) < usableTables and limit_cycles:
         
-        left_tables = usableTables * 4
+        left_tables = usableTables * 1000
         #print("TO BUILD",left_tables)
-        tables = distributeRandom(polygons['box1'],left_tables,church)
+        tables = distributeRandom(polygons['box1'],left_tables,E)
         tables = verifyGlobalDistance(tables + tables_filtered)
         if len(tables) > 0:
-            createRoom(polygons['box1'],church,tables)
+            createRoom(polygons['box1'],E,tables)
         
         tables_filtered = tables_filtered + [x for x in tables if x not in tables_filtered]
         counter += 1
